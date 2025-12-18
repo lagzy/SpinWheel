@@ -830,13 +830,13 @@
     function resizeCanvas() {
         const canvas = document.getElementById("wheelCanvas");
         
-        // Calculate optimal canvas size - good height, less width
+        // Calculate optimal canvas size - ensure perfect circle by using same dimension for both width and height
         const maxSize = Math.min(
-            window.innerWidth * 0.5,  // 50% of viewport width (reduced from 80%)
-            window.innerHeight * 0.85 // 85% of viewport height (keep this)
+            window.innerWidth * 0.4,  // 40% of viewport width for better fit
+            window.innerHeight * 0.6  // 60% of viewport height
         );
         
-        const canvasSize = Math.max(400, Math.min(800, maxSize)); // Between 400px and 800px (was 300-600px)
+        const canvasSize = Math.max(300, Math.min(600, maxSize)); // Between 300px and 600px for perfect circle
         
         canvas.width = canvasSize;
         canvas.height = canvasSize;
