@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glücksrad</title>
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --bg: #f5f5f5;
+            --panel-bg: #ffffff;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --white: #ffffff;
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-hover: rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        header {
+            width: 100%;
+            background: white;
+            border-bottom: 2px solid black;
+            color: black;
+            padding: 0.8vh 0;
+            text-align: center;
+            margin-bottom: 1vh;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        h1 { 
+            margin: 0; 
+            font-weight: 700; 
+            font-size: 1.5rem;
+            letter-spacing: 1.2px; 
+            color: black;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1vw;
+            max-width: 95vw;
+            width: 95vw;
+            height: calc(100vh - 8vh);
+            justify-content: center;
+            align-items: stretch;
+            padding: 0 1vw 1vh 1vw;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            background: white;
+            border: 2px solid black;
+            border-radius: 6px;
+            padding: 1.5vh 1.5vw;
+            box-shadow: 0 3px 6px var(--shadow);
+            flex: 1 1 45%;
+            min-width: 300px;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .panel:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px var(--shadow-hover);
+        }
+
+        /* Wheel Area */
+        .wheel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            height: 100%;
+            min-height: 0;
+        }
+
+        canvas {
+            filter: drop-shadow(0 1vh 2vh rgba(0,0,0,0.3));
+            transition: transform 0.3s ease;
+            border-radius: 50%;
+            max-width: 100%;
+            max-height: 60vh;
+            width: auto;
+            height: auto;
+        }
+
+        canvas:hover {
+            transform: scale(1.02);
+        }
+
+        canvas.spinning {
+            transform: scale(1.1);
+            filter: drop-shadow(0 30px 60px rgba(0,0,0,0.4));
+        }
+
+        .pointer {
+            position: absolute;
+            top: -21px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 42px;
+            height: 56px;
+            background: black;
+            clip-path: polygon(100% 0, 50% 100%, 0 0);
+            z-index: 2;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+            animation: pointerPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pointerPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+        }
+
+        #spin-btn {
+            margin-top: 2vh;
+            background: white;
+            border: 3px solid black;
+            color: black;
+            padding: 2.5vh 6vw;
+            font-size: 1.4rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            width: 80%;
+            max-width: 300px;
+            min-height: 60px;
+        }
+
+        #spin-btn:hover {
+            background: black;
+            color: white;
+        }
+
+        #spin-btn:active {
+            transform: scale(0.98);
+        }
+
+        #spin-btn:disabled {
+            background: #f0f0f0;
+            color: #999;
+            border-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Controls Area */
+        .input-group {
+            display: flex;
+            gap: 7px;
+            margin-bottom: 0.7rem;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 10px 14px;
+            border: 2px solid black;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s ease;
+            color: var(--text);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-light);
+        }
+
+        input[type="text"]:focus {
+            border-color: black;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        button.small-btn {
+            padding: 10px 14px;
+            background: white;
+            color: black;
+            border: 2px solid black;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        button.small-btn:hover { 
+            background: black;
+            color: white;
+        }
+        
+        button.secondary-btn { 
+            background: white;
+            color: black;
+            border: 2px solid black;
+        }
+        button.secondary-btn:hover { 
+            background: black;
+            color: white;
+        }
+        
+        button.success-btn { 
+            background: white;
+            color: black;
+            border: 2px solid black;
+        }
+        button.success-btn:hover { 
+            background: black;
+            color: white;
+        }
+
+        button.danger-btn { 
+            background: white;
+            color: black;
+            border: 2px solid black;
+        }
+        button.danger-btn:hover { 
+            background: black;
+            color: white;
+        }
+
+        .name-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5vw;
+            margin: 1vh 0;
+            max-height: 20vh;
+            overflow-y: auto;
+            padding: 1vh;
+            background: #f9f9f9;
+            border: 2px solid black;
+            border-radius: 6px;
+            flex-shrink: 1;
+        }
+
+        .name-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .name-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .name-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .name-tag {
+            background: white;
+            border: 1px solid black;
+            padding: 6px 12px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            user-select: none;
+        }
+
+        .name-tag:hover {
+            background: black;
+            color: white;
+            text-decoration: line-through;
+        }
+
+        .name-tag:active { 
+            transform: scale(0.98); 
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text);
+            font-weight: 700;
+            margin: 1.4rem 0 0.7rem;
+            padding-bottom: 7px;
+            position: relative;
+            letter-spacing: 0.8px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 35px;
+            height: 2px;
+            background: black;
+            border-radius: 0;
+        }
+
+        .saved-lists {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3vh;
+            max-height: 15vh;
+            overflow-y: auto;
+            flex-shrink: 1;
+        }
+
+        .saved-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f9f9f9;
+            border: 1px solid black;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            margin-bottom: 5px;
+        }
+
+        .saved-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .saved-item.active {
+            background: #e0e0e0;
+            border: 2px solid black;
+        }
+
+        .saved-item span { cursor: pointer; flex-grow: 1; font-weight: 500; font-size: 0.85rem; }
+        .saved-item span:hover { color: var(--primary); }
+        
+        .delete-list-btn {
+            background: none;
+            border: none;
+            color: #b2bec3;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 3px;
+            transition: color 0.2s;
+        }
+        .delete-list-btn:hover { color: var(--danger); }
+
+        /* Full Screen Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: white;
+            border: 2px solid black;
+            padding: 2rem;
+            border-radius: 6px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 7px 21px rgba(0,0,0,0.3);
+            max-width: 90%;
+            width: 315px;
+        }
+
+        .modal h2 { margin-top: 0; color: var(--primary); }
+
+        .modal-overlay.active .modal { transform: scale(1); }
+
+        .modal-buttons {
+            display: flex;
+            gap: 7px;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .winner-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 1rem 0;
+            word-wrap: break-word;
+            text-shadow: 0 1px 7px rgba(102, 126, 234, 0.3);
+            animation: winnerPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes winnerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .confetti-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        /* ================= MOBILE RESPONSIVE STYLES ================= */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            header {
+                padding: 1vh 0;
+                margin-bottom: 0.5vh;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+                letter-spacing: 0.6px;
+            }
+
+            .container {
+                flex-direction: column;
+                gap: 1vh;
+                width: 100vw;
+                height: calc(100vh - 6vh);
+                max-width: none;
+                padding: 0 2vw 1vh 2vw;
+            }
+
+            .panel {
+                min-width: unset;
+                width: 100%;
+                padding: 1vh 2vw;
+                border-radius: 8px;
+                margin: 0;
+                flex: 1;
+                min-height: 0;
+            }
+
+            .wheel-container {
+                order: -1; /* Move wheel to top on mobile */
+            }
+
+            canvas {
+                max-width: 85vw;
+                max-height: 60vh;
+                width: auto;
+                height: auto;
+            }
+
+            #spin-btn {
+                padding: 2vh 8vw;
+                font-size: 1.2rem;
+                margin-top: 2vh;
+                width: 90%;
+                max-width: 80vw;
+                min-height: 50px;
+                border-radius: 10px;
+            }
+
+            .input-group {
+                flex-direction: column;
+                gap: 1vh;
+            }
+
+            input[type="text"] {
+                padding: 1vh 2vw;
+                font-size: 16px; /* Prevents zoom on iOS */
+                border-radius: 6px;
+            }
+
+            button.small-btn {
+                padding: 1vh 2vw;
+                font-size: 0.8rem;
+                border-radius: 6px;
+                width: 100%;
+            }
+
+            .name-list {
+                max-height: 15vh;
+                padding: 1vh;
+            }
+
+            .name-tag {
+                padding: 0.5vh 2vw;
+                font-size: 0.8rem;
+                border-radius: 12px;
+            }
+
+            .section-title {
+                font-size: 0.75rem;
+                margin: 1vh 0 0.5vh;
+            }
+
+            .saved-lists {
+                max-height: 10vh;
+            }
+
+            .saved-item {
+                padding: 10px 14px;
+                border-radius: 12px;
+            }
+
+            .modal {
+                width: 95%;
+                max-width: 350px;
+                padding: 2rem 1.5rem;
+                border-radius: 25px;
+            }
+
+            .modal h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .winner-text {
+                font-size: 2rem;
+                margin: 1rem 0;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .modal-buttons button {
+                width: 100%;
+                padding: 15px;
+                font-size: 1rem;
+            }
+
+            .pointer {
+                width: 40px;
+                height: 50px;
+                top: -15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 1rem 0;
+                margin-bottom: 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .panel {
+                padding: 1.2rem;
+                border-radius: 18px;
+            }
+
+            canvas {
+                max-width: 85vw;
+                max-height: 55vh;
+                width: auto;
+                height: auto;
+            }
+
+            #spin-btn {
+                padding: 1.5vh 6vw;
+                font-size: 1.1rem;
+                letter-spacing: 1.5px;
+                min-height: 45px;
+                width: 85%;
+            }
+
+            .name-list {
+                max-height: 150px;
+                padding: 10px;
+            }
+
+            .name-tag {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+
+            .winner-text {
+                font-size: 1.8rem;
+            }
+
+            .modal {
+                padding: 1.5rem 1rem;
+            }
+
+            .section-title {
+                font-size: 0.8rem;
+                margin: 1.2rem 0 0.6rem;
+            }
+
+            .saved-item span {
+                font-size: 0.9rem;
+            }
+
+            .delete-list-btn {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .name-tag:hover {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+                color: var(--text);
+                text-decoration: none;
+                transform: none;
+                box-shadow: none;
+            }
+
+            .name-tag:active {
+                background: linear-gradient(135deg, var(--danger), #c0392b);
+                color: white;
+                text-decoration: line-through;
+                transform: scale(0.95);
+            }
+
+            button.small-btn:hover {
+                background: white;
+                color: black;
+            }
+
+            button.small-btn:active {
+                background: black;
+                color: white;
+                transform: scale(0.98);
+            }
+
+            .panel:hover {
+                transform: none;
+                box-shadow: 
+                    0 20px 40px var(--shadow),
+                    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            }
+
+            canvas:hover {
+                transform: none;
+            }
+        }
+
+        /* Landscape orientation on mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .container {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+
+            .wheel-container {
+                order: 0;
+                flex: 1;
+            }
+
+            .panel:first-child {
+                flex: 1;
+                max-width: 350px;
+            }
+
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+
+            header {
+                padding: 1rem 0;
+                margin-bottom: 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Glücks Rad für Herr Betschart</h1>
+</header>
+
+<div class="container">
+    <!-- LEFT PANEL: CONTROLS -->
+    <div class="panel">
+        
+        <div class="section-title" style="margin-top:0;">Rad:</div>
+        <div class="input-group">
+            <input type="text" id="name-input" placeholder="Namen eingeben...">
+            <button class="small-btn" onclick="addName()">Hinzufügen</button>
+        </div>
+        <div style="font-size: 0.8rem; color: #636e72; margin-top: -5px; margin-bottom: 5px;">
+            * Klicken Sie auf ein Tag, um es zu entfernen.
+        </div>
+        
+        <!-- Current List Display -->
+        <div class="name-list" id="current-list-container">
+            <!-- Tags go here -->
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex; justify-content: flex-end;">
+            <button class="small-btn success-btn" onclick="openSaveModal()" style="width: 100%;">
+                Aktuelle Liste speichern
+            </button>
+        </div>
+
+        <!-- Saved Lists -->
+        <div class="section-title">Gespeicherten Listen</div>
+        <div class="saved-lists" id="saved-lists-container">
+            <!-- Saved lists go here -->
+        </div>
+
+        <div class="section-title">Vorlagen</div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="small-btn secondary-btn" onclick="loadPreset('numbers')">1-10</button>
+            <button class="small-btn secondary-btn" onclick="loadPreset('yesno')">Ja/Nein</button>
+            <button class="small-btn secondary-btn" onclick="loadPreset('C1b')">C1b</button>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: WHEEL -->
+    <div class="panel wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheelCanvas"></canvas>
+        <button id="spin-btn" onclick="spinWheel()">DREHEN!</button>
+    </div>
+</div>
+
+<!-- SAVE LIST MODAL -->
+<div class="modal-overlay" id="save-modal">
+    <div class="modal">
+        <h2>Liste speichern</h2>
+        <p style="color:#636e72; margin-bottom: 1rem;"></p>
+        <div class="input-group" style="margin-bottom:0;">
+            <input type="text" id="save-list-name-input" placeholder="Listenname">
+        </div>
+        <div class="modal-buttons">
+            <button class="small-btn secondary-btn" onclick="closeSaveModal()">Abbrechen</button>
+            <button class="small-btn success-btn" onclick="performSave()">Liste speichern</button>
+        </div>
+    </div>
+</div>
+
+<!-- WINNER MODAL -->
+<div class="modal-overlay" id="winner-modal">
+    <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+    <div class="modal">
+        <div class="winner-text" id="winner-name">Name</div>
+        <div class="modal-buttons">
+            <button class="small-btn danger-btn" onclick="deleteWinnerFromList()">Löschen</button>
+            <button class="small-btn" onclick="closeWinnerModal()">Schließen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ================= DATA & STATE ================= */
+    let names = []; 
+    let currentListName = ""; // Tracks if we are editing a specific loaded list
+
+    const colors = [
+        '#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
+        '#DDA0DD', '#9B59B6', '#3498DB', '#E17055', '#00B894',
+        '#FDCB6E', '#6C5CE7', '#A29BFE', '#FD79A8', '#00CEC9'
+    ];
+    
+    let startAngle = 0;
+    let arc = Math.PI / (names.length / 2);
+    let spinTimeout = null;
+    let spinArcStart = 10;
+    let spinTime = 0;
+    let spinTimeTotal = 0;
+    let ctx;
+    let isSpinning = false;
+
+    // Presets
+    const presets = {
+        numbers: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+        yesno: ['Ja', 'Nein', 'Ja', 'Nein', 'Vielleicht'],
+        C1b: ['Vlad', 'Fisnik', 'Valentin', 'Tobias', 'Micha', 'Rienat', 'Selman', 'Jonas', 'Leandro', 'Elias', 'Emin']
+    };
+
+    /* ================= INIT ================= */
+    function resizeCanvas() {
+        const canvas = document.getElementById("wheelCanvas");
+        
+        // Calculate optimal canvas size - good height, less width
+        const maxSize = Math.min(
+            window.innerWidth * 0.5,  // 50% of viewport width (reduced from 80%)
+            window.innerHeight * 0.85 // 85% of viewport height (keep this)
+        );
+        
+        const canvasSize = Math.max(400, Math.min(800, maxSize)); // Between 400px and 800px (was 300-600px)
+        
+        canvas.width = canvasSize;
+        canvas.height = canvasSize;
+        canvas.style.width = canvasSize + 'px';
+        canvas.style.height = canvasSize + 'px';
+        
+        if (ctx) {
+            drawWheel();
+        }
+    }
+
+    window.onload = function() {
+        const canvas = document.getElementById("wheelCanvas");
+        ctx = canvas.getContext("2d");
+        
+        // Setup responsive canvas
+        resizeCanvas();
+        
+        // Load saved lists from LocalStorage
+        renderSavedLists();
+        
+        // Initial Draw
+        updateNameListUI();
+        drawWheel();
+
+        // Enter key listener for Adding names
+        document.getElementById("name-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") addName();
+        });
+
+        // Enter key listener for Saving List
+        document.getElementById("save-list-name-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") performSave();
+        });
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Resize canvas on orientation change (mobile)
+        window.addEventListener('orientationchange', function() {
+            setTimeout(resizeCanvas, 100);
+        });
+    };
+
+    /* ================= WHEEL LOGIC ================= */
+    function drawWheel() {
+        const canvas = document.getElementById("wheelCanvas");
+        const canvasSize = Math.min(canvas.width, canvas.height);
+        const center = canvasSize / 2;
+        
+        if (names.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
+
+        arc = Math.PI * 2 / names.length;
+        
+        // Make wheel fill almost the entire canvas
+        const outsideRadius = center * 0.98; // Use 98% of canvas (was 0.95)
+        const textRadius = center * 0.78;    // Text positioned further out (was 0.75)
+        const insideRadius = center * 0.12;  // Smaller center hole for bigger wheel (was 0.15)
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.lineWidth = Math.max(2, canvasSize * 0.006);
+        
+        // Responsive font size - bigger for larger wheel
+        const fontSize = Math.max(14, canvasSize * 0.038);
+        ctx.font = `900 ${fontSize}px Inter, Helvetica, Arial`;
+        
+        for(let i = 0; i < names.length; i++) {
+            const angle = startAngle + i * arc;
+            
+            // Draw Segment with gradient
+            const gradient = ctx.createRadialGradient(center, center, insideRadius, center, center, outsideRadius);
+            gradient.addColorStop(0, colors[i % colors.length]);
+            gradient.addColorStop(1, colors[i % colors.length] + 'CC');
+            ctx.fillStyle = gradient;
+            
+            ctx.beginPath();
+            ctx.arc(center, center, outsideRadius, angle, angle + arc, false);
+            ctx.arc(center, center, insideRadius, angle + arc, angle, true);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw Text
+            ctx.save();
+            ctx.shadowColor = "rgba(0,0,0,0.8)";
+            ctx.shadowBlur = Math.max(3, canvasSize * 0.012);
+            ctx.shadowOffsetX = Math.max(1, canvasSize * 0.004);
+            ctx.shadowOffsetY = Math.max(1, canvasSize * 0.004);
+            ctx.fillStyle = "white";
+            ctx.strokeStyle = "rgba(0,0,0,0.7)";
+            ctx.lineWidth = Math.max(2, canvasSize * 0.006);
+            
+            ctx.translate(center + Math.cos(angle + arc / 2) * textRadius, 
+                          center + Math.sin(angle + arc / 2) * textRadius);
+            ctx.rotate(angle + arc / 2 + Math.PI); 
+            
+            const text = names[i];
+            const metrics = ctx.measureText(text);
+            let displayText = text;
+            const maxTextWidth = textRadius * 0.7; // Responsive text width limit
+            if (metrics.width > maxTextWidth) {
+                // Dynamically calculate how many characters fit
+                let truncateLength = Math.floor((maxTextWidth / metrics.width) * text.length) - 3;
+                displayText = text.substring(0, Math.max(1, truncateLength)) + '...';
+            }
+            
+            const textWidth = ctx.measureText(displayText).width;
+            const x = -textWidth / 2;
+            const y = 5;
+            
+            // Draw text stroke for better contrast
+            ctx.strokeText(displayText, x, y);
+            // Draw text fill
+            ctx.fillText(displayText, x, y);
+            ctx.restore();
+        }
+    }
+
+    function spinWheel() {
+        if(isSpinning) return;
+        if(names.length < 2) {
+            alert("Fügen Sie mindestens 2 Optionen zum Drehen hinzu!");
+            return;
+        }
+
+        isSpinning = true;
+        document.getElementById('spin-btn').disabled = true;
+        document.getElementById('wheelCanvas').classList.add('spinning');
+        
+        spinAngleStart = Math.random() * 10 + 10; 
+        spinTime = 0;
+        spinTimeTotal = Math.random() * 3000 + 4000; 
+        
+        rotateWheel();
+    }
+
+    function rotateWheel() {
+        spinTime += 30;
+        if(spinTime >= spinTimeTotal) {
+            stopRotateWheel();
+            return;
+        }
+        const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+        startAngle += (spinAngle * Math.PI / 180);
+        drawWheel();
+        spinTimeout = requestAnimationFrame(rotateWheel);
+    }
+
+    function stopRotateWheel() {
+        cancelAnimationFrame(spinTimeout);
+        isSpinning = false;
+        document.getElementById('spin-btn').disabled = false;
+        document.getElementById('wheelCanvas').classList.remove('spinning');
+        
+        const degrees = startAngle * 180 / Math.PI + 90;
+        const arcd = arc * 180 / Math.PI;
+        const index = Math.floor((360 - degrees % 360) / arcd);
+        
+        showWinner(names[index]);
+    }
+
+    function easeOut(t, b, c, d) {
+        const ts = (t/=d)*t;
+        const tc = ts*t;
+        return b+c*(tc + -3*ts + 3*t);
+    }
+
+    /* ================= LIST MANAGEMENT ================= */
+    function addName() {
+        const input = document.getElementById('name-input');
+        const name = input.value.trim();
+        
+        if (name) {
+            names.push(name);
+            input.value = '';
+            updateNameListUI();
+            drawWheel();
+        }
+    }
+
+    function removeName(index) {
+        if(isSpinning) return;
+        names.splice(index, 1);
+        updateNameListUI();
+        drawWheel();
+    }
+
+    function updateNameListUI() {
+        const container = document.getElementById('current-list-container');
+        container.innerHTML = '';
+        
+        if(names.length === 0) {
+            container.innerHTML = '<div style="color:#aaa; font-style:italic; padding:5px;">Liste ist leer</div>';
+        }
+
+        names.forEach((name, index) => {
+            const tag = document.createElement('div');
+            tag.className = 'name-tag';
+            tag.textContent = name;
+            tag.title = "Zum Entfernen klicken";
+            tag.onclick = () => removeName(index);
+            container.appendChild(tag);
+        });
+    }
+
+    function loadPreset(key) {
+        if(isSpinning) return;
+        if(presets[key]) {
+            names = [...presets[key]];
+            currentListName = ""; // Presets are not custom lists yet
+            updateNameListUI();
+            drawWheel();
+            renderSavedLists(); // To clear active highlight
+        }
+    }
+
+    /* ================= SAVE / LOAD LOGIC ================= */
+    
+    // 1. Open Modal
+    function openSaveModal() {
+        if(names.length === 0) {
+            alert("Eine leere Liste kann nicht gespeichert werden.");
+            return;
+        }
+        
+        const modal = document.getElementById('save-modal');
+        const input = document.getElementById('save-list-name-input');
+        
+        // Pre-fill if we are editing an existing list
+        input.value = currentListName; 
+        
+        modal.classList.add('active');
+        input.focus();
+    }
+
+    // 2. Perform Save
+    function performSave() {
+        const input = document.getElementById('save-list-name-input');
+        const listName = input.value.trim();
+
+        if(!listName) {
+            alert("Bitte geben Sie Ihrer Liste einen Namen!");
+            return;
+        }
+
+        let savedLists = JSON.parse(localStorage.getItem('spinWheelLists')) || {};
+        savedLists[listName] = names;
+        localStorage.setItem('spinWheelLists', JSON.stringify(savedLists));
+        
+        currentListName = listName; // Update current context
+        
+        closeSaveModal();
+        renderSavedLists();
+        
+        // Visual feedback
+        // alert(`List "${listName}" saved!`); 
+    }
+
+    // 3. Close Modal
+    function closeSaveModal() {
+        document.getElementById('save-modal').classList.remove('active');
+    }
+
+    function renderSavedLists() {
+        const container = document.getElementById('saved-lists-container');
+        container.innerHTML = '';
+        
+        let savedLists = JSON.parse(localStorage.getItem('spinWheelLists')) || {};
+        
+        if(Object.keys(savedLists).length === 0) {
+            container.innerHTML = '<div style="color:#aaa; font-size:0.8rem; text-align:center; padding:10px;">Noch keine gespeicherten Listen.</div>';
+            return;
+        }
+
+        for (const [key, value] of Object.entries(savedLists)) {
+            const item = document.createElement('div');
+            item.className = 'saved-item';
+            if(key === currentListName) item.classList.add('active'); // Highlight active
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = `${key} (${value.length})`;
+            nameSpan.onclick = () => {
+                if(isSpinning) return;
+                names = [...value];
+                currentListName = key; // Set active list
+                updateNameListUI();
+                drawWheel();
+                renderSavedLists(); // Update highlights
+            };
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-list-btn';
+            delBtn.innerHTML = '&times;';
+            delBtn.title = 'Liste löschen';
+            delBtn.onclick = (e) => {
+                e.stopPropagation(); // Prevent loading when deleting
+                deleteSavedList(key);
+            };
+
+            item.appendChild(nameSpan);
+            item.appendChild(delBtn);
+            container.appendChild(item);
+        }
+    }
+
+    function deleteSavedList(key) {
+        if(!confirm(`Gespeicherte Liste "${key}" löschen?`)) return;
+        
+        let savedLists = JSON.parse(localStorage.getItem('spinWheelLists')) || {};
+        delete savedLists[key];
+        localStorage.setItem('spinWheelLists', JSON.stringify(savedLists));
+        
+        if(currentListName === key) currentListName = "";
+        
+        renderSavedLists();
+    }
+
+    /* ================= WINNER MODAL ================= */
+    function showWinner(winnerName) {
+        document.getElementById('winner-name').textContent = winnerName;
+        document.getElementById('winner-modal').classList.add('active');
+        fireConfetti();
+    }
+
+    function closeWinnerModal() {
+        document.getElementById('winner-modal').classList.remove('active');
+        const cCanvas = document.getElementById('confetti-canvas');
+        const cCtx = cCanvas.getContext('2d');
+        cCtx.clearRect(0,0,cCanvas.width, cCanvas.height);
+    }
+
+    function deleteWinnerFromList() {
+        const winnerName = document.getElementById('winner-name').textContent;
+        const winnerIndex = names.indexOf(winnerName);
+        
+        if (winnerIndex > -1) {
+            names.splice(winnerIndex, 1);
+            updateNameListUI();
+            drawWheel();
+            
+            // If we're editing a saved list, we could optionally auto-save the changes
+            // Uncomment the next 4 lines if you want to auto-save changes to saved lists
+            // if (currentListName) {
+            //     let savedLists = JSON.parse(localStorage.getItem('spinWheelLists')) || {};
+            //     savedLists[currentListName] = names;
+            //     localStorage.setItem('spinWheelLists', JSON.stringify(savedLists));
+            // }
+        }
+        
+        closeWinnerModal();
+    }
+
+    /* Confetti */
+    function fireConfetti() {
+        const canvas = document.getElementById("confetti-canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const confettiCount = 200;
+        const confettis = [];
+
+        for(let i=0; i<confettiCount; i++) {
+            confettis.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 10 + 5,
+                speed: Math.random() * 5 + 2,
+                angle: Math.random() * 6
+            });
+        }
+
+        function drawConfetti() {
+            if(!document.getElementById('winner-modal').classList.contains('active')) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            confettis.forEach((c) => {
+                c.y += c.speed;
+                c.x += Math.sin(c.angle) * 2;
+                if(c.y > canvas.height) c.y = -10;
+                
+                ctx.fillStyle = c.color;
+                ctx.fillRect(c.x, c.y, c.size, c.size);
+            });
+            requestAnimationFrame(drawConfetti);
+        }
+        drawConfetti();
+    }
+
+</script>
+</body>
+</html>
